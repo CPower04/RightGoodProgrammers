@@ -52,16 +52,10 @@ HTML_TEMPLATE = '''
     main {
       max-width: 900px;
       margin: 2rem auto;
-      padding: 2rem;
-      background: linear-gradient(135deg, #ffffff, #e6f0fa);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border: 1px solid #dce6f1;
-      transition: transform 0.2s;
-    }
-
-    main:hover {
-      transform: translateY(-3px);
+      padding: 1rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     h2 {
@@ -92,7 +86,6 @@ HTML_TEMPLATE = '''
       border-radius: 4px;
       cursor: pointer;
       margin-left: 1rem;
-      transition: background-color 0.2s;
     }
 
     input[type="submit"]:hover, button:hover {
@@ -108,9 +101,6 @@ HTML_TEMPLATE = '''
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     table th, table td {
@@ -121,14 +111,6 @@ HTML_TEMPLATE = '''
 
     table th {
       background-color: #f0f4f8;
-    }
-
-    table tr:nth-child(even) {
-      background-color: #f9fbfd;
-    }
-
-    table tr:hover {
-      background-color: #e0f0ff;
     }
 
     section p {
@@ -186,7 +168,9 @@ HTML_TEMPLATE = '''
           <button type="submit">Go</button>
         </form>
         <p>Showing rows {{ start+1 }}–{{ end }} of {{ meta.nrows }}</p>
-        {{ table|safe }}
+        <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
+            {{ table|safe }}
+        </div>
       </section>
     {% endif %}
   </main>
