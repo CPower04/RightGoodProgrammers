@@ -73,7 +73,7 @@ KEPLER_MODEL_Features = ['koi_score', 'koi_fpflag_nt', 'koi_fpflag_ss', 'koi_fpf
        'koi_prad', 'koi_prad_err1', 'koi_teq', 'koi_insol', 'koi_insol_err1',
        'koi_model_snr', 'koi_steff', 'koi_steff_err1', 'koi_steff_err2',
        'koi_slogg', 'koi_slogg_err1', 'koi_slogg_err2', 'koi_srad',
-       'koi_srad_err1', 'koi_srad_err2', 'koi_kepmag'] #whatever columns we need
+       'koi_srad_err1', 'koi_srad_err2', 'koi_kepmag']
 
 TOI_MODEL_Features = ['rastr', 'decstr', 'st_pmra', 'st_pmraerr1', 'st_pmralim', 'st_pmdec',
        'st_pmdeclim', 'pl_tranmid', 'pl_tranmiderr1', 'pl_tranmidlim',
@@ -82,7 +82,7 @@ TOI_MODEL_Features = ['rastr', 'decstr', 'st_pmra', 'st_pmraerr1', 'st_pmralim',
        'pl_trandeplim', 'pl_rade', 'pl_radeerr1', 'pl_radelim', 'pl_insol',
        'pl_eqt', 'st_tmag', 'st_tmagerr1', 'st_tmaglim', 'st_dist',
        'st_distlim', 'st_teff', 'st_tefferr1', 'st_tefflim', 'st_logg',
-       'st_loggerr1', 'st_logglim', 'st_raderr1', 'st_radlim'] #whatever columns we need
+       'st_loggerr1', 'st_logglim', 'st_raderr1', 'st_radlim']
 
 K2_MODEL_Features = ['sy_snum', 'sy_pnum', 'pl_controv_flag', 'pl_orbper', 'st_rad', 'st_raderr1', 
                      'st_radlim', 'ra', 'sy_dist', 'sy_vmag', 'sy_vmagerr1', 'sy_kmagerr1', 'sy_gaiamagerr1']
