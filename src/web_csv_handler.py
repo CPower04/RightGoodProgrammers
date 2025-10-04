@@ -16,48 +16,186 @@ PAGE_SIZE_DEFAULT = 100
 
 HTML_TEMPLATE = '''
 <!doctype html>
-<title>CSV Viewer</title>
-<h1>Upload CSV</h1>
-<form method="post" enctype="multipart/form-data">
-  <input type="file" name="file" accept=".csv,.txt,.tsv,.csv.gz">
-  <label style="margin-left:1rem">
-    <input type="checkbox" name="skip_bad" {{ 'checked' if skip_bad else '' }}>
-    Skip bad lines
-  </label>
-  <input type="submit" value="Upload">
-</form>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Viewer</title>
+  <style>
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
-  {% endif %}
-{% endwith %}
+    header {
+      background-color: #4a90e2;
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
-{% if meta %}
-  <h2>Displaying: {{ meta.filename }}</h2>
-  <p>
-    Rows: {{ meta.nrows }} | Cols: {{ meta.ncols }} |
-    Delimiter: <code>{{ meta.delimiter }}</code> |
-    Quote: <code>{{ meta.quotechar }}</code> |
-    Encoding: <code>{{ meta.encoding }}</code> |
-    Memory: ~{{ meta.mem_mb }} MB
-  </p>
-  <form method="get" style="margin: .5rem 0;">
-    <input type="hidden" name="token" value="{{ token }}">
-    <label>
-      Page:
-      <input type="number" name="page" value="{{ page }}" min="1" style="width:6ch">
-    </label>
-    <label style="margin-left:1rem">
-      Page Size:
-      <input type="number" name="page_size" value="{{ page_size }}" min="10" max="2000" style="width:6ch">
-    </label>
-    <button type="submit">Go</button>
-  </form>
-  <p>Showing rows {{ start+1 }}–{{ end }} of {{ meta.nrows }}</p>
-  {{ table|safe }}
-{% endif %}
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: linear-gradient(135deg, #ffffff, #e6f0fa);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 1px solid #dce6f1;
+      transition: transform 0.2s;
+    }
+
+    main:hover {
+      transform: translateY(-3px);
+    }
+
+    h2 {
+      color: #4a90e2;
+      margin-bottom: 1rem;
+    }
+
+    form {
+      margin-bottom: 2rem;
+    }
+
+    input[type="file"] {
+      margin-right: 1rem;
+    }
+
+    input[type="number"] {
+      width: 6ch;
+      padding: 0.25rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    input[type="submit"], button {
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    input[type="submit"]:hover, button:hover {
+      background-color: #357ab8;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+      color: #d9534f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    table th {
+      background-color: #f0f4f8;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f9fbfd;
+    }
+
+    table tr:hover {
+      background-color: #e0f0ff;
+    }
+
+    section p {
+      margin: 0.5rem 0;
+    }
+
+    label {
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CSV Viewer Application</h1>
+    <p>Upload and explore your CSV files easily.</p>
+  </header>
+
+  <main>
+    <h2>Upload CSV</h2>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv,.txt,.tsv,.csv.gz">
+      <label>
+        <input type="checkbox" name="skip_bad" {{ 'checked' if skip_bad else '' }}>
+        Skip bad lines
+      </label>
+      <input type="submit" value="Upload">
+    </form>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+      {% endif %}
+    {% endwith %}
+
+    {% if meta %}
+      <section>
+        <h2>Displaying: {{ meta.filename }}</h2>
+        <p>
+          Rows: {{ meta.nrows }} | Cols: {{ meta.ncols }} |
+          Delimiter: <code>{{ meta.delimiter }}</code> |
+          Quote: <code>{{ meta.quotechar }}</code> |
+          Encoding: <code>{{ meta.encoding }}</code> |
+          Memory: ~{{ meta.mem_mb }} MB
+        </p>
+        <form method="get" style="margin: .5rem 0;">
+          <input type="hidden" name="token" value="{{ token }}">
+          <label>
+            Page:
+            <input type="number" name="page" value="{{ page }}" min="1">
+          </label>
+          <label>
+            Page Size:
+            <input type="number" name="page_size" value="{{ page_size }}" min="10" max="2000">
+          </label>
+          <button type="submit">Go</button>
+        </form>
+        <p>Showing rows {{ start+1 }}–{{ end }} of {{ meta.nrows }}</p>
+        {{ table|safe }}
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
+
 '''
+
+
 KEPLER_MODEL_PATH = '../models/keplerkepler_rf_best.joblib'
 TOI_MODEL_PATH = '../models/toiscaler.joblib'
 K2_MODEL_PATH = '../models/k2panda_model.pkl'
