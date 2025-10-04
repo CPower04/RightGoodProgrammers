@@ -5,8 +5,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from flask import (Flask, flash, redirect, render_template_string, request,
-                   url_for)
+from flask import Flask, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -17,7 +16,7 @@ app.secret_key ="secret_key"
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 PAGE_SIZE_DEFAULT = 100
 
-HTML_TEMPLATE = 'static/index.html'
+HTML_TEMPLATE = 'index.html'
 
 
 KEPLER_MODEL_PATH = '../models/keplerkepler_rf_best.joblib'
@@ -161,7 +160,7 @@ def upload_or_view():
         end = min(len(df), start + page_size)
         page_df = df.iloc[start:end]
         table_html = page_df.to_html(classes='table table-striped', index=False, border=0)
-        return render_template_string(
+        return render_template(
             HTML_TEMPLATE,
             meta=meta,
             table=table_html,
@@ -237,7 +236,7 @@ def upload_or_view():
 
             start, end = 0, min(len(df_model), PAGE_SIZE_DEFAULT)
             table_html = df_model.iloc[start:end].to_html(classes='table table-striped', index=False, border=0)
-            return render_template_string(
+            return render_template(
                 HTML_TEMPLATE,
                 meta=meta,
                 table=table_html,
@@ -258,7 +257,7 @@ def upload_or_view():
                 pass
 
    
-    return render_template_string(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
+    return render_template(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
