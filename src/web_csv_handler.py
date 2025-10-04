@@ -205,16 +205,22 @@ def upload_or_view():
                 if model_type == 'kepler':
                     x = make_matrix(df, KEPLER_MODEL_Features)
                     preds = kepler_model.predict(x)
+                    probs = kepler_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
                     df_model['Predicted Status'] = preds
 
                 elif model_type == 'k2':
                     x = make_matrix(df, K2_MODEL_Features)
                     preds = k2_model.predict(x)
+                    probs = k2_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
                     df_model['Predicted Status'] = preds
 
                 elif model_type == 'toi':
                     x = make_matrix(df, TOI_MODEL_Features)
                     preds = toi_model.predict(x)
+                    probs = toi_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
                     df_model['Predicted Status'] = preds
 
                 else:
