@@ -108,5 +108,8 @@ plt.savefig(os.path.join(dir_path.replace('data', 'models'), 'confusion_matrix.p
 ```
 ### Evaluation
 - Generated **confusion matrices** to visualize classification performance.
+### Readings
+- Inspiration and background knowledege was obtained from reading : Humphrey, A.L.T. & Quintana, E.V., 2020. Predicting missing planets in multiplanet system populations via analytical assessments of dynamical packing. arXiv preprint arXiv:2011.03053 [astro-ph.EP]. Available at: https://arxiv.org/abs/2011.03053
+ [Accessed 4 October 2025].
 
 
