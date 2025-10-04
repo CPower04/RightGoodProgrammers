@@ -19,8 +19,8 @@ PAGE_SIZE_DEFAULT = 100
 HTML_TEMPLATE = 'index.html'
 
 
-KEPLER_MODEL_PATH = '../models/keplerkepler_rf_best.joblib'
-TOI_MODEL_PATH = '../models/toiscaler.joblib'
+KEPLER_MODEL_PATH = '../models/keplerkepler_rf_best.pkl'
+TOI_MODEL_PATH = '../models/toi_rf_best.pkl'
 K2_MODEL_PATH = '../models/k2panda_model.pkl'
 
 kepler_model = joblib.load(KEPLER_MODEL_PATH)
@@ -58,6 +58,11 @@ def select_model(df):
     best = max(scores, key=scores.get)
     return best if scores[best] > 0 else None
 
+def make_matrix(df: pd.DataFrame, features):
+    x = df.reindex(columns=features, fill_value=np.nan).copy()
+    for c in features:
+        x[c] = pd.to_numeric(x[c], errors='coerce')
+    return x.fillna(0.0)
 
 def predict_status(df):
     X = df[KEPLER_MODEL_Features].copy()
@@ -74,19 +79,19 @@ def predict_toi_status(df):
     return X
 
 def predict_kepler(df):
-    x = predict_status(df)
-    predict = kepler_model.predict(x)
-    return predict
+    x = make_matrix(df, KEPLER_MODEL_Features)
+    return kepler_model.predict(x)
+    
 
 def predict_k2(df):
-    x = predict_k2_status(df)
-    predict = k2_model.predict(x)
-    return predict
+    x = make_matrix(df, K2_MODEL_Features)
+    return k2_model.predict(x)
+    
 
 def predict_toi(df):
-    x = predict_toi_status(df)
-    predict = toi_model.predict(x)
-    return predict
+    x = make_matrix(df, TOI_MODEL_Features)
+    return toi_model.predict(x)
+
 def sniff_dialect(sample_bytes: bytes):
     # Use csv.Sniffer to detect delimiter & quotechar.
     # Fall back to comma if sniffer fails.
@@ -194,33 +199,29 @@ def upload_or_view():
         try:
             df, parse_info = try_read_csv(temp_path, skip_bad=skip_bad)
             model_type = select_model(df)
-            if model_type == 'kepler':
-                used_cols = [col for col in KEPLER_MODEL_Features if col in df.columns]
-                df_model = df[used_cols].copy()
-                try:
-                    preds = kepler_model.predict(df_model)
+            df_model = df.copy()
+            
+            try:
+                if model_type == 'kepler':
+                    x = make_matrix(df, KEPLER_MODEL_Features)
+                    preds = kepler_model.predict(x)
                     df_model['Predicted Status'] = preds
-                except Exception as e:
-                    flash(f'Prediction error: {e}')
-            elif model_type == 'k2':
-                used_cols = [col for col in K2_MODEL_Features if col in df.columns]
-                df_model = df[used_cols].copy()
-                try:
-                    preds = k2_model.predict(df_model)
+
+                elif model_type == 'k2':
+                    x = make_matrix(df, K2_MODEL_Features)
+                    preds = k2_model.predict(x)
                     df_model['Predicted Status'] = preds
-                except Exception as e:
-                    flash(f'Prediction error: {e}')
-            elif model_type == 'toi':
-                used_cols = [col for col in TOI_MODEL_Features if col in df.columns]
-                df_model = df[used_cols].copy()
-                try:
-                    preds = toi_model.predict(df_model)
+
+                elif model_type == 'toi':
+                    x = make_matrix(df, TOI_MODEL_Features)
+                    preds = toi_model.predict(x)
                     df_model['Predicted Status'] = preds
-                except Exception as e:
-                    flash(f'Prediction error: {e}')
-            else:
-                flash('Could not match CSV to any known model.')
-                df_model = df.copy()
+
+                else:
+                    flash('Could not match CSV to any known model.')
+
+            except Exception as e:
+                flash(f'Prediction error: {e}')
 
             token = next(tempfile._get_candidate_names())
             meta = {
@@ -256,7 +257,7 @@ def upload_or_view():
             except Exception:
                 pass
 
-   
+
     return render_template(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
 
 if __name__ == '__main__':
