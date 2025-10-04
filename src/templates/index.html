@@ -103,9 +103,33 @@
     label {
       font-size: 0.95rem;
     }
+
+    /* Full-width red button style */
+    .full-width-red-btn {
+      width: 100%;
+      background-color: red;
+      color: white;
+      font-size: 1.5rem;
+      height: 60px;
+      border: none;
+      cursor: pointer;
+      display: block;
+      margin: 0;
+    }
+
+    .full-width-red-btn:hover {
+      background-color: darkred;
+    }
   </style>
 </head>
 <body>
+  <!-- Full-width red button to run Streamlit -->
+  <form method="post" action="{{ url_for('run_streamlit') }}" style="margin:0;">
+      <button type="submit" class="full-width-red-btn">
+          Run Streamlit MEGNO
+      </button>
+  </form>
+
   <header>
     <h1>CSV Viewer Application</h1>
     <p>Upload and explore your CSV files easily.</p>

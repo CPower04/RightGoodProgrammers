@@ -1,7 +1,7 @@
 import csv
 import tempfile
 from pathlib import Path
-
+import subprocess
 import joblib
 import numpy as np
 import pandas as pd
@@ -150,6 +150,33 @@ def mem_megabytes(df: pd.DataFrame) -> float:
         return round(df.memory_usage(deep=True).sum() / (1024**2), 2)
     except Exception:
         return round(df.memory_usage().sum() / (1024**2), 2)
+
+@app.route('/run_streamlit', methods=['POST'])
+def run_streamlit():
+    try:
+        # Get the Flask app directory
+        base_dir = Path(__file__).parent.resolve()
+        print(f"Base directory: {base_dir}")
+        # Relative path to the script
+        base_dir = base_dir.parent  # Move up to src
+        print(f"Parent directory: {base_dir}")
+        streamlit_dir = base_dir / "astrophys"
+        streamlit_script = "streamlitmegno.py"
+        
+        # Command to run in PowerShell
+        cmd = f"streamlit run .\\{streamlit_script}"
+        
+        # Launch asynchronously
+        subprocess.Popen(
+            ["powershell", "-Command", cmd],
+            shell=True,
+            cwd=streamlit_dir
+        )
+        
+    except Exception as e:
+        flash(f"Error launching Streamlit: {e}")
+    
+    return redirect(url_for('upload_or_view'))
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_or_view():

@@ -1,0 +1,13 @@
+- Learnt how to read and process csvs using pandas
+- Gained an understanding for the importance of cleaning data and segregation of data into categorical and numerical columns
+- Cleaned data by dropping null columns (columns with more than 75% null contents)
+- Performed one hot encoding on data to map categorical data to numerical
+- Analyzed correlated columns and dropped columns that have a correlation (correlated columns skew data)
+- Peformed a test train split on the cleaned data, maintaining a statify to ensure that a uniform distribution of target columns in the cleaned data
+- Seperated training dataframe into x and y
+- Scaled data to prevent feature dominance, i.e. big numbers don't contribute way more to our model than small numbers
+- Trained a model using multiple different numbers of estimators in order to obtain the best possible F1 score
+- Created a confusion matrix for the best performing model 
+- Created functionality to load and save models
+- Parsed data from string to float by converting string timestamp into seconds
+- fixed multiple git merge errors and had to rebase my code due to a large file being attempted to commit in a stashed commit
