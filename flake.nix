@@ -20,6 +20,7 @@
                     matplotlib
                     scikit-learn
                     jupyter
+                    flask
                 ]);
             in
                 {
