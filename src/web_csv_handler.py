@@ -1,11 +1,14 @@
-from flask import Flask, render_template_string, request, redirect, url_for, flash
-from werkzeug.utils import secure_filename
-import pandas as pd
+import csv
 import tempfile
 from pathlib import Path
-import csv
+
 import joblib
 import numpy as np
+import pandas as pd
+from flask import (Flask, flash, redirect, render_template_string, request,
+                   url_for)
+from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 app.secret_key ="secret_key"
 
@@ -418,7 +421,7 @@ def upload_or_view():
                 pass
 
    
-    return render_template_string(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
+    return render_template_string('index.html', meta=None, table=None, skip_bad=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
