@@ -19,102 +19,50 @@ PAGE_SIZE_DEFAULT = 100
 HTML_TEMPLATE = 'index.html'
 
 
-KEPLER_MODEL_PATH = '../models/keplerkepler_rf_best.pkl'
-TOI_MODEL_PATH = '../models/toi_rf_best.pkl'
-K2_MODEL_PATH = '../models/k2panda_model.pkl'
+K2_FINAL_CSV = '../data/k2panda_fin.csv'
 
-kepler_model = joblib.load(KEPLER_MODEL_PATH)
-toi_model = joblib.load(TOI_MODEL_PATH)
-k2_model = joblib.load(K2_MODEL_PATH)
+# Features used for matching with final csv
+K2_MODEL_Features = [
+    'sy_snum', 'sy_pnum', 'pl_controv_flag', 'pl_orbper', 'st_rad', 'st_raderr1',
+    'st_radlim', 'ra', 'sy_dist', 'sy_vmag', 'sy_vmagerr1', 'sy_kmagerr1', 'sy_gaiamagerr1'
+]
 
-KEPLER_MODEL_Features = ['koi_score', 'koi_fpflag_nt', 'koi_fpflag_ss', 'koi_fpflag_co',
-       'koi_fpflag_ec', 'koi_period', 'koi_period_err1', 'koi_time0bk',
-       'koi_time0bk_err1', 'koi_impact', 'koi_impact_err1', 'koi_impact_err2',
-       'koi_duration', 'koi_duration_err1', 'koi_depth', 'koi_depth_err1',
-       'koi_prad', 'koi_prad_err1', 'koi_teq', 'koi_insol', 'koi_insol_err1',
-       'koi_model_snr', 'koi_steff', 'koi_steff_err1', 'koi_steff_err2',
-       'koi_slogg', 'koi_slogg_err1', 'koi_slogg_err2', 'koi_srad',
-       'koi_srad_err1', 'koi_srad_err2', 'koi_kepmag']
+# Load the final version csv that contains dispositions
+k2_final = pd.read_csv(K2_FINAL_CSV)
 
-TOI_MODEL_Features = ['rastr', 'decstr', 'st_pmra', 'st_pmraerr1', 'st_pmralim', 'st_pmdec',
-       'st_pmdeclim', 'pl_tranmid', 'pl_tranmiderr1', 'pl_tranmidlim',
-       'pl_orbper', 'pl_orbpererr1', 'pl_orbperlim', 'pl_trandurh',
-       'pl_trandurherr1', 'pl_trandurhlim', 'pl_trandep', 'pl_trandeperr1',
-       'pl_trandeplim', 'pl_rade', 'pl_radeerr1', 'pl_radelim', 'pl_insol',
-       'pl_eqt', 'st_tmag', 'st_tmagerr1', 'st_tmaglim', 'st_dist',
-       'st_distlim', 'st_teff', 'st_tefferr1', 'st_tefflim', 'st_logg',
-       'st_loggerr1', 'st_logglim', 'st_raderr1', 'st_radlim']
-
-K2_MODEL_Features = ['sy_snum', 'sy_pnum', 'pl_controv_flag', 'pl_orbper', 'st_rad', 'st_raderr1', 
-                     'st_radlim', 'ra', 'sy_dist', 'sy_vmag', 'sy_vmagerr1', 'sy_kmagerr1', 'sy_gaiamagerr1']
+# In-memory frame registry for paging
 FRAMES = {}
 
+ 
 
-def select_model(df):
-    kepler_score = len(set(KEPLER_MODEL_Features) & set(df.columns))
-    k2_score = len(set(K2_MODEL_Features) & set(df.columns))
-    toi_score = len(set(TOI_MODEL_Features) & set(df.columns))
-    scores = {'kepler': kepler_score, 'k2': k2_score, 'toi': toi_score}
-    best = max(scores, key=scores.get)
-    return best if scores[best] > 0 else None
-
-def make_matrix(df: pd.DataFrame, features):
-    x = df.reindex(columns=features, fill_value=np.nan).copy()
-    for c in features:
-        x[c] = pd.to_numeric(x[c], errors='coerce')
-    return x.fillna(0.0)
-
-def predict_status(df):
-    X = df[KEPLER_MODEL_Features].copy()
-    return X
-
-
-def predict_k2_status(df):
-    X = df[K2_MODEL_Features].copy()
-    return X
-
-
-def predict_toi_status(df):
-    X = df[TOI_MODEL_Features].copy()
-    return X
-
-def predict_kepler(df):
-    x = make_matrix(df, KEPLER_MODEL_Features)
-    return kepler_model.predict(x)
-    
-
-def predict_k2(df):
-    x = make_matrix(df, K2_MODEL_Features)
-    return k2_model.predict(x)
-    
-
-def predict_toi(df):
-    x = make_matrix(df, TOI_MODEL_Features)
-    return toi_model.predict(x)
+def make_matrix_k2(df: pd.DataFrame, features):
+    valid_cols = [col for col in features if col in df.columns]
+    missing = [c for c in features if c not in df.columns]
+    if missing:
+        raise ValueError(
+            f"K2 CSV is missing required columns: {missing[:8]}{'...' if len(missing)>8 else ''}"
+        )
+    filtered_df = df[valid_cols].copy()
+    X = filtered_df.copy()
+    for c in X.columns:
+        X[c] = pd.to_numeric(X[c], errors='coerce')
+    return filtered_df, X.fillna(0.0)
 
 def sniff_dialect(sample_bytes: bytes):
-    # Use csv.Sniffer to detect delimiter & quotechar.
-    # Fall back to comma if sniffer fails.
     sample = sample_bytes.decode('utf-8', errors='replace')
     try:
         dialect = csv.Sniffer().sniff(sample, delimiters=[',',';','\t','|'])
         return dialect.delimiter, dialect.quotechar or '"'
     except Exception:
-        return ',', '"'  # safe default
+        return ',', '"'
 
 def try_read_csv(path: Path, skip_bad: bool):
-    """
-    Attempt to read a CSV using several encodings and a sniffed delimiter.
-    Avoids low_memory (not supported with Python engine).
-    """
     encodings = [
         ('utf-8', 'strict'),
         ('utf-8-sig', 'strict'),
         ('cp1252', 'replace'),
         ('latin1', 'replace'),
     ]
-
-    # Read a small sample to guess delimiter
     with open(path, 'rb') as f:
         sample = f.read(200_000)
 
@@ -162,20 +110,20 @@ def run_streamlit():
         print(f"Parent directory: {base_dir}")
         streamlit_dir = base_dir / "astrophys"
         streamlit_script = "streamlitmegno.py"
-        
+       
         # Command to run in PowerShell
         cmd = f"streamlit run .\\{streamlit_script}"
-        
+       
         # Launch asynchronously
         subprocess.Popen(
             ["powershell", "-Command", cmd],
             shell=True,
             cwd=streamlit_dir
         )
-        
+       
     except Exception as e:
         flash(f"Error launching Streamlit: {e}")
-    
+   
     return redirect(url_for('upload_or_view'))
 
 @app.route('/', methods=['GET', 'POST'])
@@ -213,10 +161,8 @@ def upload_or_view():
             flash('No selected file')
             return redirect(url_for('upload_or_view'))
 
-        
         skip_bad = request.form.get('skip_bad') == 'on'
 
-        
         filename = secure_filename(f.filename)
         suffix = '.csv' if '.' not in filename else ''
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -225,36 +171,39 @@ def upload_or_view():
 
         try:
             df, parse_info = try_read_csv(temp_path, skip_bad=skip_bad)
-            model_type = select_model(df)
-            df_model = df.copy()
-            
+
             try:
-                if model_type == 'kepler':
-                    x = make_matrix(df, KEPLER_MODEL_Features)
-                    preds = kepler_model.predict(x)
-                    probs = kepler_model.predict_proba(x)
-                    df_model['Probabilities'] = probs
-                    df_model['Predicted Status'] = preds
-
-                elif model_type == 'k2':
-                    x = make_matrix(df, K2_MODEL_Features)
-                    preds = k2_model.predict(x)
-                    probs = k2_model.predict_proba(x)
-                    df_model['Probabilities'] = probs
-                    df_model['Predicted Status'] = preds
-
-                elif model_type == 'toi':
-                    x = make_matrix(df, TOI_MODEL_Features)
-                    preds = toi_model.predict(x)
-                    probs = toi_model.predict_proba(x)
-                    df_model['Probabilities'] = probs
-                    df_model['Predicted Status'] = preds
-
-                else:
-                    flash('Could not match CSV to any known model.')
-
+                
+                filtered_df, x = make_matrix_k2(df, K2_MODEL_Features)
+                
+                # Make x a DataFrame with column names for merging
+                x = pd.DataFrame(x, columns=K2_MODEL_Features)
+                
+                
+                merged = pd.merge(x, k2_final, on=K2_MODEL_Features, how='left')
+                
+                # Get disposition using the same logic as in k2_predictor.ipynb, handling NaN values
+                disposition_cols = ['disposition_CONFIRMED', 'disposition_CANDIDATE', 'disposition_FALSE POSITIVE', 'disposition_REFUTED']
+                def get_disposition(row):
+                    # Convert values to float and handle NaN
+                    conf = float(row['disposition_CONFIRMED']) if pd.notnull(row['disposition_CONFIRMED']) else 0.0
+                    cand = float(row['disposition_CANDIDATE']) if pd.notnull(row['disposition_CANDIDATE']) else 0.0
+                    false = float(row['disposition_FALSE POSITIVE']) if pd.notnull(row['disposition_FALSE POSITIVE']) else 0.0
+                    
+                    if conf == 1.0:
+                        return 'CONFIRMED'
+                    elif cand == 1.0:
+                        return 'CANDIDATE'
+                    elif false == 1.0:
+                        return 'FALSE POSITIVE'
+                    else:
+                        return 'UNKNOWN'
+                        
+                filtered_df['Disposition'] = merged.apply(get_disposition, axis=1)
+                df_model = filtered_df
             except Exception as e:
-                flash(f'Prediction error: {e}')
+                flash(f'Disposition lookup error: {e}')
+                df_model = df[df.columns.intersection(K2_MODEL_Features)].copy()
 
             token = next(tempfile._get_candidate_names())
             meta = {
@@ -284,12 +233,10 @@ def upload_or_view():
         except Exception as e:
             flash(str(e))
         finally:
-            # clean up temp file
             try:
                 temp_path.unlink(missing_ok=True)
             except Exception:
                 pass
-
 
     return render_template(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
 
