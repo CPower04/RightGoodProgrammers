@@ -27,7 +27,6 @@ K2_MODEL_Features = [
     'st_radlim', 'ra', 'sy_dist', 'sy_vmag', 'sy_vmagerr1', 'sy_kmagerr1', 'sy_gaiamagerr1'
 ]
 
-
 def _load_k2_lookup():
     p = Path(K2_LOOKUP_PKL)
     if p.exists():
@@ -52,7 +51,6 @@ def _load_k2_lookup():
     return pd.read_csv(K2_FINAL_CSV)
 
 k2_final = _load_k2_lookup()
-
 
 FRAMES = {}
 
@@ -134,7 +132,6 @@ def run_streamlit():
         flash(f"Error launching Streamlit: {e}")
     return redirect(url_for('upload_or_view'))
 
-
 @app.route('/', methods=['GET', 'POST'])
 def upload_or_view():
     token = request.args.get('token')
@@ -187,7 +184,6 @@ def upload_or_view():
 
                 # Merge with lookup (from PKL or CSV)
                 merged = pd.merge(x, k2_final, on=K2_MODEL_Features, how='left')
-
                 
                 disp_cols = [
                     'disposition_CONFIRMED',
@@ -216,7 +212,11 @@ def upload_or_view():
                 flash(f'Disposition lookup error: {e}')
                 df_model = df[df.columns.intersection(K2_MODEL_Features)].copy()
 
-            
+            # ✅ Move Disposition column to the front
+            if 'Disposition' in df_model.columns:
+                cols = ['Disposition'] + [c for c in df_model.columns if c != 'Disposition']
+                df_model = df_model[cols]
+
             token = next(tempfile._get_candidate_names())
             meta = {
                 'filename': filename,
@@ -229,7 +229,6 @@ def upload_or_view():
             }
             FRAMES[token] = {'df': df_model, 'meta': meta, 'skip_bad': skip_bad}
 
-            
             start, end = 0, min(len(df_model), PAGE_SIZE_DEFAULT)
             table_html = df_model.iloc[start:end].to_html(classes='table table-striped', index=False, border=0)
             return render_template(
@@ -251,7 +250,6 @@ def upload_or_view():
             except Exception:
                 pass
 
-    
     return render_template(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
 
 # --------------------------------------------------------------------
