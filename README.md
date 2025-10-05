@@ -108,7 +108,38 @@ plt.savefig(os.path.join(dir_path.replace('data', 'models'), 'confusion_matrix.p
 ```
 ### Visualization tools
 - GraphingOrbit.py = A script which utilizes a cli in order to simulate the orbit planets around a star.
-- steamlitmegno.py = A script which creates a localhost gui in order to create a MEGNO stability map, map planet trajectories and visualize MEGNO between planets using a custom CSV (accessible via web interface).
+- steamlitmegno.py = A script which creates a localhost gui in order to create a MEGNO stability map, map planet trajectories and visualize MEGNO between planets using a custom CSV (accessible via flask interface).
+### Locahlhost applications
+- To visualize our workings, we created a flask application that reads in csv data and then predicts the planet candidate statuses. The application works by extracting the individual columns from the csv and then applying the most relevant predictor model. Data cleaning and parsing is performed on the inputted csv and then the appropriate predictor model is applied.
+``` python
+try:
+            df, parse_info = try_read_csv(temp_path, skip_bad=skip_bad)
+            model_type = select_model(df)
+            df_model = df.copy()
+            
+            try:
+                if model_type == 'kepler':
+                    x = make_matrix(df, KEPLER_MODEL_Features)
+                    preds = kepler_model.predict(x)
+                    probs = kepler_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
+                    df_model['Predicted Status'] = preds
+
+                elif model_type == 'k2':
+                    x = make_matrix(df, K2_MODEL_Features)
+                    preds = k2_model.predict(x)
+                    probs = k2_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
+                    df_model['Predicted Status'] = preds
+
+                elif model_type == 'toi':
+                    x = make_matrix(df, TOI_MODEL_Features)
+                    preds = toi_model.predict(x)
+                    probs = toi_model.predict_proba(x)
+                    df_model['Probabilities'] = probs
+                    df_model['Predicted Status'] = preds
+```
+  
 
 ### Readings
 - Inspiration and background knowledege was obtained from reading : Humphrey, A.L.T. & Quintana, E.V., 2020. Predicting missing planets in multiplanet system populations via analytical assessments of dynamical packing. arXiv preprint arXiv:2011.03053 [astro-ph.EP]. Available at: https://arxiv.org/abs/2011.03053
