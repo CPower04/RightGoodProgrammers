@@ -17,11 +17,9 @@ PAGE_SIZE_DEFAULT = 100
 
 HTML_TEMPLATE = 'index.html'
 
-# --------------------------------------------------------------------
 # K2 paths
-# --------------------------------------------------------------------
-K2_LOOKUP_PKL = 'k2panda_model.pkl'      # preferred lookup
-K2_FINAL_CSV = '../data/k2panda_fin.csv'  # fallback if PKL is not usable
+K2_LOOKUP_PKL = 'k2panda_model.pkl'      
+K2_FINAL_CSV = '../data/k2panda_fin.csv' 
 
 # Features used for matching
 K2_MODEL_Features = [
@@ -29,9 +27,7 @@ K2_MODEL_Features = [
     'st_radlim', 'ra', 'sy_dist', 'sy_vmag', 'sy_vmagerr1', 'sy_kmagerr1', 'sy_gaiamagerr1'
 ]
 
-# --------------------------------------------------------------------
-# Load K2 lookup table (try PKL first, fallback to CSV)
-# --------------------------------------------------------------------
+
 def _load_k2_lookup():
     p = Path(K2_LOOKUP_PKL)
     if p.exists():
@@ -57,12 +53,9 @@ def _load_k2_lookup():
 
 k2_final = _load_k2_lookup()
 
-# In-memory frame registry
+
 FRAMES = {}
 
-# --------------------------------------------------------------------
-# Helper functions
-# --------------------------------------------------------------------
 def make_matrix_k2(df: pd.DataFrame, features):
     valid_cols = [col for col in features if col in df.columns]
     missing = [c for c in features if c not in df.columns]
@@ -124,9 +117,6 @@ def mem_megabytes(df: pd.DataFrame) -> float:
     except Exception:
         return round(df.memory_usage().sum() / (1024**2), 2)
 
-# --------------------------------------------------------------------
-# Streamlit trigger
-# --------------------------------------------------------------------
 @app.route('/run_streamlit', methods=['POST'])
 def run_streamlit():
     try:
@@ -144,9 +134,7 @@ def run_streamlit():
         flash(f"Error launching Streamlit: {e}")
     return redirect(url_for('upload_or_view'))
 
-# --------------------------------------------------------------------
-# Main route
-# --------------------------------------------------------------------
+
 @app.route('/', methods=['GET', 'POST'])
 def upload_or_view():
     token = request.args.get('token')
@@ -200,7 +188,7 @@ def upload_or_view():
                 # Merge with lookup (from PKL or CSV)
                 merged = pd.merge(x, k2_final, on=K2_MODEL_Features, how='left')
 
-                # Handle NA safely before checking
+                
                 disp_cols = [
                     'disposition_CONFIRMED',
                     'disposition_CANDIDATE',
@@ -211,7 +199,7 @@ def upload_or_view():
                         merged[c] = 0
                 merged[disp_cols] = merged[disp_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
 
-                # Determine disposition (no NA ambiguity now)
+                # Determine disposition
                 def get_disposition(row):
                     if row['disposition_CONFIRMED'] == 1:
                         return 'CONFIRMED'
@@ -228,7 +216,7 @@ def upload_or_view():
                 flash(f'Disposition lookup error: {e}')
                 df_model = df[df.columns.intersection(K2_MODEL_Features)].copy()
 
-            # Cache for paging
+            
             token = next(tempfile._get_candidate_names())
             meta = {
                 'filename': filename,
@@ -241,7 +229,7 @@ def upload_or_view():
             }
             FRAMES[token] = {'df': df_model, 'meta': meta, 'skip_bad': skip_bad}
 
-            # Show first page
+            
             start, end = 0, min(len(df_model), PAGE_SIZE_DEFAULT)
             table_html = df_model.iloc[start:end].to_html(classes='table table-striped', index=False, border=0)
             return render_template(
@@ -263,7 +251,7 @@ def upload_or_view():
             except Exception:
                 pass
 
-    # Default GET
+    
     return render_template(HTML_TEMPLATE, meta=None, table=None, skip_bad=True)
 
 # --------------------------------------------------------------------
