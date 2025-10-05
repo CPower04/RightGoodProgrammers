@@ -18,7 +18,7 @@ PAGE_SIZE_DEFAULT = 100
 HTML_TEMPLATE = 'index.html'
 
 # K2 paths
-K2_LOOKUP_PKL = 'k2panda_model.pkl'      
+K2_LOOKUP_PKL = '../model/k2panda_model.pkl'      
 K2_FINAL_CSV = '../data/k2panda_fin.csv' 
 
 # Features used for matching
@@ -212,7 +212,6 @@ def upload_or_view():
                 flash(f'Disposition lookup error: {e}')
                 df_model = df[df.columns.intersection(K2_MODEL_Features)].copy()
 
-            # ✅ Move Disposition column to the front
             if 'Disposition' in df_model.columns:
                 cols = ['Disposition'] + [c for c in df_model.columns if c != 'Disposition']
                 df_model = df_model[cols]
