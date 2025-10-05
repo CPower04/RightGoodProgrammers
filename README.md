@@ -106,8 +106,10 @@ plt.show()
 
 plt.savefig(os.path.join(dir_path.replace('data', 'models'), 'confusion_matrix.png'))
 ```
-### Evaluation
-- Generated **confusion matrices** to visualize classification performance.
+### Visualization tools
+- GraphingOrbit.py = A script which utilizes a cli in order to simulate the orbit planets around a star.
+- steamlitmegno.py = A script which creates a localhost gui in order to create a MEGNO stability map, map planet trajectories and visualize MEGNO between planets using a custom CSV (accessible via web interface).
+
 ### Readings
 - Inspiration and background knowledege was obtained from reading : Humphrey, A.L.T. & Quintana, E.V., 2020. Predicting missing planets in multiplanet system populations via analytical assessments of dynamical packing. arXiv preprint arXiv:2011.03053 [astro-ph.EP]. Available at: https://arxiv.org/abs/2011.03053
  [Accessed 4 October 2025].
